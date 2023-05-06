@@ -2,25 +2,33 @@
 
 Simple steps to compile:
 
-	# Clone openwrt repo
-	git clone https://github.com/openwrt/openwrt.git
-	cd openwrt
-	
-	# Checkout the current release tag
-	git checkout openwrt-xx.xx
+	# Download openwrt sdk
+	wget https://downloads.openwrt.org/releases/22.03.5/targets/ipq40xx/generic/openwrt-sdk-22.03.5-ipq40xx-generic_gcc-11.2.0_musl_eabi.Linux-x86_64.tar.xz
+	tar xf openwrt-sdk*.tar.xz
+	cd openwrt-sdk*
 
-	# Install feeds
+	# Update and install feeds
 	./scripts/feeds update -a
-	./scripts/feeds install -a
-	
-	# Delete the orignal dnsmasq package from official feeds
-	rm -rf package/network/services/dnsmasq
-	
-	# Config and build the 'dnsmasq' as module. It was located in 'Base System '
+	./scripts/feeds install libpcre
+
+	# Disable some options related to kernel modules, They are located in 'Global Build Settings'
 	make menuconfig
+	Press SPACE to disable 'Select all target specific packages by default'
+	Press SPACE to disable 'Select all kernel module packages by default'
+	Press SPACE to disable 'Select all userspace packages by default'
+	Press ESC twice to exit and save.
+
+	# Clone the source of dnsmasq-regex
+	pushd package
+	git clone https://github.com/lixingcong/dnsmasq-regex-openwrt -b openwrt-22.03
+	popd
 	
-	# Compile the full openwrt, it may take about 20 minutes
-	make -j8
+	# Config modules. It was located in 'Base System'
+	make menuconfig
+	Press M to compile dnsmasq as a module
+
+	# (Optional) Speed up the compile progress
+	Press SPACE to disable useless 'libatomic', 'libgomp', 'librt', 'libstdcpp'
 	
 	# Compile dnsmasq
 	make package/dnsmasq-regex-openwrt/compile V=s
