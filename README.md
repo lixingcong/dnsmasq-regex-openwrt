@@ -52,4 +52,50 @@ If you could not run dnsmasq, run ```logread``` and check if error occurred like
 
 Consider add ```/etc/dnsmasq.d``` to ```/etc/config/dhcp``` to get file access permission. Check for [this issue](https://github.com/openwrt/openwrt/issues/9726#issuecomment-1198828327).
 
+## Where does the patch come from?
 
+The patches are from [dnsmasq-regex](https://github.com/lixingcong/dnsmasq-regex/tree/master/patches), and ```900-regex-server-ipset.patch``` is produced by [quilt](https://openwrt.org/docs/guide-developer/toolchain/use-patches-with-buildsystem) command.
+
+<details>
+  <summary>More</summary>
+
+```
+# Install upstream dnsmasq
+./scripts/feeds install dnsmasq
+
+# Move the upstream dnsmasq folder to custom one
+rm package/feeds/base/dnsmasq
+mv feeds/base/package/network/services/dnsmasq package/dnsmasq-regex-openwrt
+
+# Change dnsmasq/Makefile to add some build flags
+
+# Apply patches from dnsmasq-regex repo
+make package/dnsmasq-regex-openwrt/{clean,prepare} V=s QUILT=1
+cd build_dir/target*/dnsmasq-nodhcpv6/dnsmasq-2.86
+
+# Apply all patches maintained by Openwrt developers
+quilt series
+quilt push aaa.patch
+quilt push bbb.patch
+
+# Create a regex patch
+quilt new 900-regex-server-ipset.patch
+
+quilt add Makefile
+quilt add src/config.h
+quilt add src/dnsmasq.h
+quilt add src/domain-match.c
+quilt add src/forward.c
+quilt add src/network.c
+quilt add src/option.c
+
+patch -p1 < /path/to/001-regex-server.patch
+patch -p1 < /path/to/002-regex-ipset.patch
+quilt refresh
+make package/dnsmasq-regex-openwrt/update V=s
+
+# Rebuild the package
+make package/dnsmasq-regex-openwrt/clean,compile} V=s
+```
+
+</details>
