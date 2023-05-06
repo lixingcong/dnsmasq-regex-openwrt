@@ -50,14 +50,18 @@ If you could not run dnsmasq, run ```logread``` and check if error occurred like
 
 	daemon.crit dnsmasq[1]: cannot access directory /etc/dnsmasq.d/: No such file or directory
 
-Consider add ```/etc/dnsmasq.d``` to ```/etc/config/dhcp``` to get file access permission. Check for [this issue](https://github.com/openwrt/openwrt/issues/9726#issuecomment-1198828327).
+Consider adding ```option confdir /etc/dnsmasq.d``` to ```/etc/config/dhcp``` to get file access permission.
+
+Or you can add ```procd_add_jail_mount /etc/dnsmasq.d``` to ```/etc/init.d/dnsmasq```, a few lines before ```procd_close_instance```
+
+Check for [this issue](https://github.com/openwrt/openwrt/issues/9726#issuecomment-1198828327) for more details.
 
 ## Where does the patch come from?
 
-The patches are from [dnsmasq-regex](https://github.com/lixingcong/dnsmasq-regex/tree/master/patches), and ```900-regex-server-ipset.patch``` is produced by [quilt](https://openwrt.org/docs/guide-developer/toolchain/use-patches-with-buildsystem) command.
+The patch is from [dnsmasq-regex](https://github.com/lixingcong/dnsmasq-regex/tree/master/patches), and ```900-regex-server-ipset.patch``` is produced by [quilt](https://openwrt.org/docs/guide-developer/toolchain/use-patches-with-buildsystem) command.
 
 <details>
-  <summary>More</summary>
+  <summary>How to use quilt to deploy patches</summary>
 
 ```
 # Install upstream dnsmasq
@@ -71,7 +75,7 @@ mv feeds/base/package/network/services/dnsmasq package/dnsmasq-regex-openwrt
 
 # Apply patches from dnsmasq-regex repo
 make package/dnsmasq-regex-openwrt/{clean,prepare} V=s QUILT=1
-cd build_dir/target*/dnsmasq-nodhcpv6/dnsmasq-2.86
+cd build_dir/target*/dnsmasq-nodhcpv6/dnsmasq-*
 
 # Apply all patches maintained by Openwrt developers
 quilt series
@@ -95,7 +99,7 @@ quilt refresh
 make package/dnsmasq-regex-openwrt/update V=s
 
 # Rebuild the package
-make package/dnsmasq-regex-openwrt/clean,compile} V=s
+make package/dnsmasq-regex-openwrt/{clean,compile} V=s
 ```
 
 </details>
