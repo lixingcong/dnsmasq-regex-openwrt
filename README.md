@@ -78,9 +78,12 @@ make package/dnsmasq-regex-openwrt/{clean,prepare} V=s QUILT=1
 cd build_dir/target*/dnsmasq-nodhcpv6/dnsmasq-*
 
 # Apply all patches maintained by Openwrt developers
-quilt series
-quilt push aaa.patch
-quilt push bbb.patch
+quilt push -a
+
+# If you want to apply several patches(not all), run 'quilt push xxx' many times
+# quilt series
+# quilt push 001-xxx.patch
+# quilt push 002-xxx.patch
 
 # Create a regex patch
 quilt new 900-regex-server-ipset.patch
