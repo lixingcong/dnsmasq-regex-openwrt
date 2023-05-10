@@ -471,7 +471,7 @@
    struct server *serv = NULL;
    char *alloc_domain;
    
-@@ -606,7 +803,18 @@ int add_update_server(int flags,
+@@ -606,9 +803,32 @@ int add_update_server(int flags,
        if (*domain != 0)
  	flags |= SERV_WILDCARD;
      }
@@ -481,17 +481,31 @@
 +    size_t domainLen=strlen(domain);
 +    char* regex_end=(char*)domain+domainLen-1;
 +    if (domainLen > 2 && *domain == ':' && *regex_end == ':'){
++      const char* err = NULL;
++
 +      ++domain; // skip leading ':'
++      --domainLen; // skip leading ':'
++
 +      *regex_end = '\0'; // skip tailing ':'
 +      regex = domain;
++
++      // call whine_malloc() instead of canonicalise()
++      if ((alloc_domain = whine_malloc(domainLen)))
++        memcpy(alloc_domain, domain, domainLen);
 +    }
 +  }
 +#endif
 +
    if (*domain == 0)
      alloc_domain = whine_malloc(1);
++#ifdef HAVE_REGEX
++  else if(regex && alloc_domain)
++    ;
++#endif
    else if (!(alloc_domain = canonicalise((char *)domain, NULL)))
-@@ -692,7 +900,21 @@ int add_update_server(int flags,
+     return 0;
+   
+@@ -692,7 +912,21 @@ int add_update_server(int flags,
        if (source_addr)
  	serv->source_addr = *source_addr;
      }
