@@ -461,7 +461,17 @@
  int is_local_answer(time_t now, int first, char *name)
  {
    int flags = 0;
-@@ -591,6 +785,9 @@ int add_update_server(int flags,
+@@ -491,6 +685,9 @@ static int order(char *qdomain, size_t q
+ static int order_servers(struct server *s1, struct server *s2)
+ {
+   int rc;
++#ifdef HAVE_REGEX
++  if(!s1) return -1;
++#endif
+ 
+   /* need full comparison of dotless servers in 
+      order_qsort() and filter_servers() */
+@@ -591,6 +788,9 @@ int add_update_server(int flags,
  		      const char *domain,
  		      union all_addr *local_addr)
  {
@@ -471,7 +481,7 @@
    struct server *serv = NULL;
    char *alloc_domain;
    
-@@ -606,9 +803,32 @@ int add_update_server(int flags,
+@@ -606,9 +806,32 @@ int add_update_server(int flags,
        if (*domain != 0)
  	flags |= SERV_WILDCARD;
      }
@@ -505,7 +515,7 @@
    else if (!(alloc_domain = canonicalise((char *)domain, NULL)))
      return 0;
    
-@@ -692,7 +912,21 @@ int add_update_server(int flags,
+@@ -692,7 +915,21 @@ int add_update_server(int flags,
        if (source_addr)
  	serv->source_addr = *source_addr;
      }

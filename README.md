@@ -64,6 +64,9 @@ The patch is from [dnsmasq-regex](https://github.com/lixingcong/dnsmasq-regex/tr
   <summary>How to use quilt to deploy patches</summary>
 
 ```
+# Dir of openwrt
+cd $OPENWRT_ROOT
+
 # Install upstream dnsmasq
 ./scripts/feeds install dnsmasq
 
@@ -71,11 +74,12 @@ The patch is from [dnsmasq-regex](https://github.com/lixingcong/dnsmasq-regex/tr
 rm package/feeds/base/dnsmasq
 mv feeds/base/package/network/services/dnsmasq package/dnsmasq-regex-openwrt
 
-# Change dnsmasq/Makefile to add some build flags
+# Change dnsmasq-regex-openwrt/Makefile to add some build flags
+Example: COPTS = -DHAVE_REGEX -DHAVE_REGEX_IPSET
 
 # Apply patches from dnsmasq-regex repo
 make package/dnsmasq-regex-openwrt/{clean,prepare} V=s QUILT=1
-cd build_dir/target*/dnsmasq-nodhcpv6/dnsmasq-*
+cd $OPENWRT_ROOT/build_dir/target*/dnsmasq-nodhcpv6/dnsmasq-*
 
 # Apply all patches maintained by Openwrt developers
 quilt push -a
@@ -83,7 +87,7 @@ quilt push -a
 # If you want to apply several patches(not all), run 'quilt push xxx' many times
 # quilt series
 # quilt push 001-xxx.patch
-# quilt push 002-xxx.patch
+# quilt push 999-xxx.patch
 
 # Create a regex patch
 quilt new 900-regex-server-ipset.patch
@@ -96,12 +100,14 @@ quilt add src/forward.c
 quilt add src/network.c
 quilt add src/option.c
 
+# Aplly patches from dnsmasq-regex
 patch -p1 < /path/to/001-regex-server.patch
 patch -p1 < /path/to/002-regex-ipset.patch
 quilt refresh
-make package/dnsmasq-regex-openwrt/update V=s
 
-# Rebuild the package
+# Update and rebuild the package
+cd $OPENWRT_ROOT
+make package/dnsmasq-regex-openwrt/update V=s
 make package/dnsmasq-regex-openwrt/{clean,compile} V=s
 ```
 
