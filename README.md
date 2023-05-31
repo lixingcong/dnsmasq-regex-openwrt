@@ -3,11 +3,12 @@
 Simple steps to compile:
 
 	# Download openwrt sdk
-	wget https://downloads.openwrt.org/releases/22.03.5/targets/ipq40xx/generic/openwrt-sdk-22.03.5-ipq40xx-generic_gcc-11.2.0_musl_eabi.Linux-x86_64.tar.xz
+	wget https://downloads.openwrt.org/releases/xx.xx/targets/ipq40xx/generic/openwrt-sdk-xx.xx.tar.xz
 	tar xf openwrt-sdk*.tar.xz
 	cd openwrt-sdk*
 
 	# Update and install feeds
+	sudo apt-get install python3-distutils
 	./scripts/feeds update -a
 	./scripts/feeds install libpcre
 
@@ -20,7 +21,7 @@ Simple steps to compile:
 
 	# Clone the source of dnsmasq-regex
 	pushd package
-	git clone https://github.com/lixingcong/dnsmasq-regex-openwrt -b openwrt-22.03
+	git clone https://github.com/lixingcong/dnsmasq-regex-openwrt -b openwrt-23.05
 	popd
 	
 	# Config modules. It was located in 'Base System'
