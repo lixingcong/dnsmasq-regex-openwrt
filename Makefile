@@ -134,7 +134,7 @@ endef
 Package/dnsmasq-dhcpv6/conffiles = $(Package/dnsmasq/conffiles)
 Package/dnsmasq-full/conffiles = $(Package/dnsmasq/conffiles)
 
-COPTS = -DHAVE_UBUS -DHAVE_POLL_H -DHAVE_REGEX\
+COPTS = -DHAVE_UBUS -DHAVE_POLL_H -DHAVE_REGEX -DHAVE_REGEX_IPSET \
 	$(if $(CONFIG_IPV6),,-DNO_IPV6)
 
 ifeq ($(BUILD_VARIANT),nodhcpv6)
@@ -153,7 +153,6 @@ ifeq ($(BUILD_VARIANT),full)
 		$(if $(CONFIG_PACKAGE_dnsmasq_$(BUILD_VARIANT)_broken_rtc),-DHAVE_BROKEN_RTC) \
 		$(if $(CONFIG_PACKAGE_dnsmasq_$(BUILD_VARIANT)_tftp),,-DNO_TFTP)
 	COPTS += $(if $(CONFIG_LIBNETTLE_MINI),-DNO_GMP,)
-	COPTS += -DHAVE_REGEX_IPSET
 else
 	COPTS += -DNO_AUTH -DNO_IPSET -DNO_ID
 endif
