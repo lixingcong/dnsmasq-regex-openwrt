@@ -12,7 +12,7 @@
  LDFLAGS       = 
  COPTS         = 
  RPM_OPT_FLAGS = 
-@@ -69,6 +73,8 @@ nettle_libs =   `echo $(COPTS) | $(top)/
+@@ -70,6 +74,8 @@ nettle_libs =   `echo $(COPTS) | $(top)/
                                                          HAVE_CRYPTOHASH $(PKG_CONFIG) --libs nettle \
                                                          HAVE_NETTLEHASH $(PKG_CONFIG) --libs nettle`
  gmp_libs =      `echo $(COPTS) | $(top)/bld/pkg-wrapper HAVE_DNSSEC NO_GMP --copy -lgmp`
@@ -21,7 +21,7 @@
  sunos_libs =    `if uname | grep SunOS >/dev/null 2>&1; then echo -lsocket -lnsl -lposix4; fi`
  nft_cflags =    `echo $(COPTS) | $(top)/bld/pkg-wrapper HAVE_NFTSET $(PKG_CONFIG) --cflags libnftables` 
  nft_libs =      `echo $(COPTS) | $(top)/bld/pkg-wrapper HAVE_NFTSET $(PKG_CONFIG) --libs libnftables`
-@@ -92,8 +98,8 @@ hdrs = dnsmasq.h config.h dhcp-protocol.
+@@ -93,8 +99,8 @@ hdrs = dnsmasq.h config.h dhcp-protocol.
  all : $(BUILDDIR)
  	@cd $(BUILDDIR) && $(MAKE) \
   top="$(top)" \
@@ -32,7 +32,7 @@
   -f $(top)/Makefile dnsmasq 
  
  mostly_clean :
-@@ -117,8 +123,8 @@ all-i18n : $(BUILDDIR)
+@@ -118,8 +124,8 @@ all-i18n : $(BUILDDIR)
  	@cd $(BUILDDIR) && $(MAKE) \
   top="$(top)" \
   i18n=-DLOCALEDIR=\'\"$(LOCALEDIR)\"\' \
@@ -45,7 +45,7 @@
  		cd $(top) && cd $(BUILDDIR) && $(MAKE) top="$(top)" -f $(top)/Makefile $${f%.po}.mo; \
 --- a/src/config.h
 +++ b/src/config.h
-@@ -200,6 +200,8 @@ RESOLVFILE
+@@ -203,6 +203,8 @@ RESOLVFILE
  /* #define HAVE_CRYPTOHASH */
  /* #define HAVE_DNSSEC */
  /* #define HAVE_NFTSET */
@@ -54,7 +54,7 @@
  
  /* Default locations for important system files. */
  
-@@ -389,6 +391,15 @@ static char *compile_opts =
+@@ -392,6 +394,15 @@ static char *compile_opts =
  "no-"
  #endif
  "i18n "
@@ -83,7 +83,7 @@
  /* Backwards compat with 2.83 */
  #if defined(HAVE_NETTLEHASH)
  #  define HAVE_CRYPTOHASH
-@@ -579,6 +583,10 @@ struct randfd_list {
+@@ -590,6 +594,10 @@ struct randfd_list {
  struct server {
    u16 flags, domain_len;
    char *domain;
@@ -94,7 +94,7 @@
    struct server *next;
    int serial, arrayposn;
    int last_server;
-@@ -601,6 +609,10 @@ struct server {
+@@ -612,6 +620,10 @@ struct server {
  struct serv_addr4 {
    u16 flags, domain_len;
    char *domain;
@@ -105,7 +105,7 @@
    struct server *next;
    struct in_addr addr;
  };
-@@ -608,6 +620,10 @@ struct serv_addr4 {
+@@ -619,6 +631,10 @@ struct serv_addr4 {
  struct serv_addr6 {
    u16 flags, domain_len;
    char *domain;
@@ -116,7 +116,7 @@
    struct server *next;
    struct in6_addr addr;
  };
-@@ -615,6 +631,10 @@ struct serv_addr6 {
+@@ -626,6 +642,10 @@ struct serv_addr6 {
  struct serv_local {
    u16 flags, domain_len;
    char *domain;
@@ -127,7 +127,7 @@
    struct server *next;
  };
  
-@@ -627,6 +647,10 @@ struct ipsets {
+@@ -638,6 +658,10 @@ struct ipsets {
    char **sets;
    char *domain;
    struct ipsets *next;
@@ -138,7 +138,7 @@
  };
  
  struct allowlist {
-@@ -1147,6 +1171,9 @@ extern struct daemon {
+@@ -1178,6 +1202,9 @@ extern struct daemon {
    struct rebind_domain *no_rebind;
    int server_has_wildcard;
    int serverarraysz, serverarrayhwm;
@@ -148,7 +148,7 @@
    struct ipsets *ipsets, *nftsets;
    u32 allowlist_mask;
    struct allowlist *allowlists;
-@@ -1852,6 +1879,12 @@ void dump_packet_icmp(int mask, void *pa
+@@ -1893,6 +1920,12 @@ void dump_packet_icmp(int mask, void *pa
  #endif
  
  /* domain-match.c */
@@ -320,14 +320,15 @@
    
    /* find query length and presence of '.' */
    for (cp = qdomain, nodots = 1, qlen = 0; *cp; qlen++, cp++)
-@@ -254,9 +323,42 @@ int lookup_domain(char *domain, int flag
-     *highout = nhigh;
+@@ -255,9 +324,42 @@ int lookup_domain(char *domain, int flag
  
-   if (nlow == nhigh)
+   /* qlen == -1 when we failed to match even an empty query, if there are no default servers. */
+   if (nlow == nhigh || qlen == -1)
 -    return 0;
-+    goto search_regex;
- 
+-  
 -  return 1;
++    goto search_regex;
++
 +  founddomain = 1;
 +
 +search_regex:
@@ -365,7 +366,7 @@
  }
  
  /* Return first server in group of equivalent servers; this is the "master" record. */
-@@ -269,6 +371,14 @@ int filter_servers(int seed, int flags,
+@@ -270,6 +372,14 @@ int filter_servers(int seed, int flags,
  {
    int nlow = seed, nhigh = seed;
    int i;
@@ -380,7 +381,7 @@
    
    /* expand nlow and nhigh to cover all the records with the same domain 
       nlow is the first, nhigh - 1 is the last. nlow=nhigh means no servers,
-@@ -365,6 +475,89 @@ int filter_servers(int seed, int flags,
+@@ -366,6 +476,89 @@ int filter_servers(int seed, int flags,
    return (nlow != nhigh);
  }
  
@@ -470,7 +471,7 @@
  int is_local_answer(time_t now, int first, char *name)
  {
    int flags = 0;
-@@ -504,6 +697,9 @@ static int order(char *qdomain, size_t q
+@@ -505,6 +698,9 @@ static int order(char *qdomain, size_t q
  static int order_servers(struct server *s1, struct server *s2)
  {
    int rc;
@@ -480,7 +481,7 @@
  
    /* need full comparison of dotless servers in 
       order_qsort() and filter_servers() */
-@@ -625,6 +821,9 @@ int add_update_server(int flags,
+@@ -626,6 +822,9 @@ int add_update_server(int flags,
  		      const char *domain,
  		      union all_addr *local_addr)
  {
@@ -490,7 +491,7 @@
    struct server *serv = NULL;
    char *alloc_domain;
    
-@@ -640,10 +839,32 @@ int add_update_server(int flags,
+@@ -641,10 +840,32 @@ int add_update_server(int flags,
        if (*domain != 0)
  	flags |= SERV_WILDCARD;
      }
@@ -524,7 +525,7 @@
      alloc_domain = canonicalise((char *)domain, NULL);
  
    if (!alloc_domain)
-@@ -743,6 +964,16 @@ int add_update_server(int flags,
+@@ -744,6 +965,16 @@ int add_update_server(int flags,
    serv->flags = flags;
    serv->domain = alloc_domain;
    serv->domain_len = strlen(alloc_domain);
@@ -555,7 +556,7 @@
        
        master = daemon->serverarray[first];
        
-@@ -359,6 +364,9 @@ static int forward_query(int udpfd, unio
+@@ -360,6 +365,9 @@ static int forward_query(int udpfd, unio
  	      forward->forwardall = 1;
  	    }
  	  else
@@ -565,7 +566,7 @@
  	    start = master->last_server;
  	}
      }
-@@ -401,7 +409,14 @@ static int forward_query(int udpfd, unio
+@@ -402,7 +410,14 @@ static int forward_query(int udpfd, unio
  	    forward->sentto->failed_queries++;
  	  else
  	    forward->sentto->retrys++;
@@ -581,7 +582,7 @@
  	  if (!filter_servers(forward->sentto->arrayposn, F_SERVER, &first, &last))
  	    goto reply;
  	  
-@@ -493,8 +508,13 @@ static int forward_query(int udpfd, unio
+@@ -494,8 +509,13 @@ static int forward_query(int udpfd, unio
    while (1)
      { 
        int fd;
@@ -597,7 +598,7 @@
        if ((fd = allocate_rfd(&forward->rfds, srv)) != -1)
  	{
  	  
-@@ -667,6 +687,12 @@ static struct ipsets *domain_find_sets(s
+@@ -668,6 +688,12 @@ static struct ipsets *domain_find_sets(s
    unsigned int matchlen = 0;
    for (ipset_pos = setlist; ipset_pos; ipset_pos = ipset_pos->next) 
      {
@@ -610,7 +611,7 @@
        unsigned int domainlen = strlen(ipset_pos->domain);
        const char *matchstart = domain + namelen - domainlen;
        if (namelen >= domainlen && hostname_isequal(matchstart, ipset_pos->domain) &&
-@@ -676,6 +702,9 @@ static struct ipsets *domain_find_sets(s
+@@ -677,6 +703,9 @@ static struct ipsets *domain_find_sets(s
            matchlen = domainlen;
            ret = ipset_pos;
          }
@@ -620,10 +621,10 @@
      }
  
    return ret;
-@@ -2302,9 +2331,17 @@ unsigned char *tcp_request(int confd, ti
- 	      struct server *master;
- 	      int start;
- 
+@@ -2360,9 +2389,17 @@ unsigned char *tcp_request(int confd, ti
+ 	      blockdata_retrieve(saved_question, (size_t)saved_size, header);
+ 	      size = saved_size;
+ 	      
 -	      if (lookup_domain(daemon->namebuff, gotname, &first, &last))
 +	      if (lookup_domain(daemon->namebuff, gotname, &first, &last)){
  		flags = is_local_answer(now, first, daemon->namebuff);
@@ -639,7 +640,7 @@
  		{
  		  /* No configured servers */
  		  ede = EDE_NOT_READY;
-@@ -2323,7 +2360,11 @@ unsigned char *tcp_request(int confd, ti
+@@ -2381,7 +2418,11 @@ unsigned char *tcp_request(int confd, ti
  		{
  		  master = daemon->serverarray[first];
  		  
@@ -653,7 +654,7 @@
  		    start = master->last_server;
 --- a/src/network.c
 +++ b/src/network.c
-@@ -1657,6 +1657,10 @@ void check_servers(int no_loop_check)
+@@ -1671,6 +1671,10 @@ void check_servers(int no_loop_check)
  	    s1 = _("unqualified"), s2 = _("names");
  	  else if (strlen(serv->domain) == 0)
  	    s1 = _("default"), s2 = "";
@@ -664,7 +665,7 @@
  	  else
  	    s1 = _("domain"), s2 = serv->domain, s4 = (serv->flags & SERV_WILDCARD) ? "*" : "";
  	  
-@@ -1686,8 +1690,14 @@ void check_servers(int no_loop_check)
+@@ -1700,8 +1704,14 @@ void check_servers(int no_loop_check)
  	   if (++locals <= LOCALS_LOGGED)
  	     my_syslog(LOG_INFO, _("using only locally-known addresses for %s"), serv->domain);
  	 }
@@ -682,7 +683,7 @@
    if (locals > LOCALS_LOGGED)
 --- a/src/option.c
 +++ b/src/option.c
-@@ -3138,6 +3138,18 @@ static int one_opt(int option, char *arg
+@@ -3176,6 +3176,18 @@ static int one_opt(int option, char *arg
  	     while ((end = split_chr(arg, '/'))) 
  	       {
  		 char *domain = NULL;
@@ -701,7 +702,7 @@
  		 /* elide leading dots - they are implied in the search algorithm */
  		 while (*arg == '.')
  		   arg++;
-@@ -3150,6 +3162,9 @@ static int one_opt(int option, char *arg
+@@ -3188,6 +3200,9 @@ static int one_opt(int option, char *arg
  		 ipsets = ipsets->next;
  		 memset(ipsets, 0, sizeof(struct ipsets));
  		 ipsets->domain = domain;
