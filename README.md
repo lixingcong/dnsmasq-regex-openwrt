@@ -1,4 +1,6 @@
-# Compile it as ipk
+# Compile it as apk
+
+The old PCRE library was [removed](https://github.com/openwrt/packages/commit/38d5b8b3444ab83348a35adec145443d755aae45) from OpenWrt. We should link to libpcre2.
 
 Simple steps to compile:
 
@@ -10,26 +12,16 @@ Simple steps to compile:
 	# Update and install feeds
 	sudo apt-get install python3-distutils
 	./scripts/feeds update -a
-	./scripts/feeds install libpcre
-
-	# Disable some options related to kernel modules, They are located in 'Global Build Settings'
-	make menuconfig
-	Press SPACE to disable 'Select all target specific packages by default'
-	Press SPACE to disable 'Select all kernel module packages by default'
-	Press SPACE to disable 'Select all userspace packages by default'
-	Press ESC twice to exit and save.
+	./scripts/feeds install libpcre2
 
 	# Clone the source of dnsmasq-regex
 	pushd package
-	git clone https://github.com/lixingcong/dnsmasq-regex-openwrt -b openwrt-23.05
+	git clone https://github.com/lixingcong/dnsmasq-regex-openwrt -b openwrt-25.12
 	popd
 	
 	# Config modules. It was located in 'Base System'
 	make menuconfig
 	Press M to compile dnsmasq as a module
-
-	# (Optional) Speed up the compile progress
-	Press SPACE to disable useless 'libatomic', 'libgomp', 'librt', 'libstdcpp'
 	
 	# Compile dnsmasq
 	make package/dnsmasq-regex-openwrt/compile V=s
@@ -73,10 +65,10 @@ cd $OPENWRT_ROOT
 
 # Move the upstream dnsmasq folder to custom one
 rm package/feeds/base/dnsmasq
-mv feeds/base/package/network/services/dnsmasq package/dnsmasq-regex-openwrt
+mv feeds/base_root/package/network/services/dnsmasq package/dnsmasq-regex-openwrt
 
 # Change dnsmasq-regex-openwrt/Makefile to add some build flags
-Example: COPTS = -DHAVE_REGEX -DHAVE_REGEX_IPSET
+Example: COPTS = -DHAVE_REGEX -DHAVE_REGEX_IPSET -DHAVE_PCRE2
 
 # Apply patches from dnsmasq-regex repo
 make package/dnsmasq-regex-openwrt/{clean,prepare} V=s QUILT=1
