@@ -94,7 +94,7 @@
 +#include <pcre.h>
 +#define PCRE_REGEX       pcre
 +#define PCRE_REGEX_EXTRA pcre_extra
-+#define FREE_PCRE_REGEX       free
++#define FREE_PCRE_REGEX       pcre_free
 +#define FREE_PCRE_REGEX_EXTRA pcre_free_study
 +#endif
 +#endif
